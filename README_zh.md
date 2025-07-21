@@ -1,100 +1,212 @@
 # Alibaba Cloud Ops MCP Server
 
-[![GitHub stars](https://img.shields.io/github/stars/aliyun/alibaba-cloud-ops-mcp-server?style=social)](https://github.com/aliyun/alibaba-cloud-ops-mcp-server)
+[![GitHub stars](https://img.shields.io/github/stars/RadiumGu/alicloud-ops-mcp?style=social)](https://github.com/RadiumGu/alicloud-ops-mcp)
 
-[English README](./README.md)
+[English README](./README_updated.md)
 
 Alibaba Cloud Ops MCP Server是一个[模型上下文协议（MCP）](https://modelcontextprotocol.io/introduction)服务器，提供与阿里云API的无缝集成，使AI助手能够操作阿里云上的资源，支持ECS、云监控、OOS等广泛使用的云产品。
 
-## 准备
+## 特点
 
-安装[uv](https://github.com/astral-sh/uv)
+- **全面的API支持**：访问ECS、VPC、RDS、OSS、云监控等服务
+- **简单集成**：易于与任何兼容MCP的AI助手集成
+- **安全认证**：使用阿里云AccessKey进行安全API访问
+- **灵活部署**：可以在本地或云环境中部署
+- **详尽文档**：提供完善的工具文档和示例
 
+## 快速开始
+
+### 前提条件
+
+- 阿里云账户及AccessKey ID和Secret
+- Python 3.8+环境
+- 虚拟环境（推荐）
+
+### 安装
+
+1. 克隆仓库：
 ```bash
-# On macOS and Linux.
-curl -LsSf https://astral.sh/uv/install.sh | sh
+git clone https://github.com/RadiumGu/alicloud-ops-mcp.git
+cd alicloud-ops-mcp
 ```
 
-## 配置
+2. 创建并激活虚拟环境：
+```bash
+python -m venv .venv
+source .venv/bin/activate  # Windows上: .venv\Scripts\activate
+```
 
-使用 [VS Code](https://code.visualstudio.com/) + [Cline](https://cline.bot/) 配置MCP Server
+3. 安装依赖：
+```bash
+pip install -r requirements.txt
+```
 
-要将 `alibaba-cloud-ops-mcp-server` MCP 服务器与任何其他 MCP 服务器一起使用，您可以手动添加此配置并重新启动以使更改生效：
+### 配置
+
+在项目目录中创建一个`.env`文件，内容如下：
+
+```
+ALIBABA_CLOUD_ACCESS_KEY_ID=你的访问密钥ID
+ALIBABA_CLOUD_ACCESS_KEY_SECRET=你的访问密钥SECRET
+ALIBABA_CLOUD_REGION=cn-beijing
+```
+
+要将`alicloud-ops-mcp`与Amazon Q CLI或其他MCP客户端一起使用，请将以下配置添加到您的MCP配置文件中（例如`~/.aws/amazonq/mcp.json`）：
 
 ```json
 {
   "mcpServers": {
     "alibaba-cloud-ops-mcp-server": {
-      "timeout": 600,
-      "command": "uvx",
+      "timeout": 30000,
+      "command": "/path/to/your/venv/bin/python",
       "args": [
-        "alibaba-cloud-ops-mcp-server@latest"
+        "/path/to/alicloud-ops-mcp/complete_fastmcp_server.py"
       ],
       "env": {
-        "ALIBABA_CLOUD_ACCESS_KEY_ID": "Your Access Key ID",
-        "ALIBABA_CLOUD_ACCESS_KEY_SECRET": "Your Access Key SECRET"
-      }
+        "PYTHONUNBUFFERED": "1",
+        "PYTHONPATH": "/path/to/alicloud-ops-mcp"
+      },
+      "disabled": false,
+      "autoApprove": []
     }
   }
 }
 ```
 
-[详细参数说明见 MCP 启动参数文档](./README_mcp_args.md)
+请将`/path/to/your/venv`和`/path/to/alicloud-ops-mcp`替换为您的实际路径。
+
+### 本地运行
+
+运行服务器：
+```bash
+python complete_fastmcp_server.py
+```
+
+## 项目结构
+
+```
+alicloud-ops-mcp/
+├── alibaba_cloud_ops_mcp_server/     # 主包
+│   ├── __init__.py
+│   ├── __main__.py
+│   ├── alibabacloud/                 # 阿里云API工具
+│   │   ├── __init__.py
+│   │   ├── api_meta_client.py
+│   │   ├── exception.py
+│   │   ├── static/
+│   │   └── utils.py
+│   ├── config.py                     # 配置设置
+│   ├── server.py                     # 服务器实现
+│   └── tools/                        # 工具实现
+│       ├── __init__.py
+│       ├── api_tools.py              # 通用API工具
+│       ├── cms_tools.py              # 云监控工具
+│       ├── common_api_tools.py       # 通用API实用程序
+│       ├── oos_tools.py              # OOS工具
+│       └── oss_tools.py              # OSS工具
+├── complete_fastmcp_server.py        # 主服务器入口点
+├── .env                              # 环境变量（需要创建）
+├── requirements.txt                  # 依赖项
+├── README.md                         # 文档
+└── README_zh.md                      # 中文文档
+```
+
+## 可用工具
+
+| **产品** | **工具** | **功能** | **实现方式** | **状态** |
+| --- | --- | --- | --- | --- |
+| ECS | RunCommand | 运行命令 | OOS | 完成 |
+|  | StartInstances | 启动实例 | OOS | 完成 |
+|  | StopInstances | 停止实例 | OOS | 完成 |
+|  | RebootInstances | 重启实例 | OOS | 完成 |
+|  | DescribeInstances | 查看实例 | API | 完成 |
+|  | DescribeRegions | 查看地域 | API | 完成 |
+|  | DescribeZones | 查看可用区 | API | 完成 |
+|  | DescribeAvailableResource | 查看资源库存 | API | 完成 |
+|  | DescribeImages | 查看镜像 | API | 完成 |
+|  | DescribeSecurityGroups | 查看安全组 | API | 完成 |
+|  | RunInstances | 创建实例 | OOS | 完成 |
+|  | DeleteInstances | 删除实例 | API | 完成 |
+|  | ResetPassword | 修改密码 | OOS | 完成 |
+|  | ReplaceSystemDisk | 更换操作系统 | OOS | 完成 |
+| VPC | DescribeVpcs | 查看VPC | API | 完成 |
+|  | DescribeVSwitches | 查看VSwitch | API | 完成 |
+| RDS | DescribeDBInstances | 查询数据库实例列表 | API | 完成 |
+|  | StartDBInstances | 启动RDS实例 | OOS | 完成 |
+|  | StopDBInstances | 暂停RDS实例 | OOS | 完成 |
+|  | RestartDBInstances | 重启RDS实例 | OOS | 完成 |
+| OSS | ListBuckets | 查看存储空间 | API | 完成 |
+|  | PutBucket | 创建存储空间 | API | 完成 |
+|  | DeleteBucket | 删除存储空间 | API | 完成 |
+|  | ListObjects | 查看存储空间中的文件信息 | API | 完成 |
+| CloudMonitor | GetCpuUsageData | 获取ECS实例的CPU使用率数据 | API | 完成 |
+|  | GetCpuLoadavgData | 获取CPU一分钟平均负载指标数据 | API | 完成 |
+|  | GetCpuloadavg5mData | 获取CPU五分钟平均负载指标数据 | API | 完成 |
+|  | GetCpuloadavg15mData | 获取CPU十五分钟平均负载指标数据 | API | 完成 |
+|  | GetMemUsedData | 获取内存使用量指标数据 | API | 完成 |
+|  | GetMemUsageData | 获取内存利用率指标数据 | API | 完成 |
+|  | GetDiskUsageData | 获取磁盘利用率指标数据 | API | 完成 |
+|  | GetDiskTotalData | 获取磁盘分区总容量指标数据 | API | 完成 |
+|  | GetDiskUsedData | 获取磁盘分区使用量指标数据 | API | 完成 |
 
 ## MCP市场集成
 
 * [Cline](https://cline.bot/mcp-marketplace)
-* [Cursor](https://docs.cursor.com/tools) [![Install MCP Server](https://cursor.com/deeplink/mcp-install-dark.svg)](https://cursor.com/install-mcp?name=alibaba-cloud-ops-mcp-server&config=eyJ0aW1lb3V0Ijo2MDAsImNvbW1hbmQiOiJ1dnggYWxpYmFiYS1jbG91ZC1vcHMtbWNwLXNlcnZlckBsYXRlc3QiLCJlbnYiOnsiQUxJQkFCQV9DTE9VRF9BQ0NFU1NfS0VZX0lEIjoiWW91ciBBY2Nlc3MgS2V5IElEIiwiQUxJQkFCQV9DTE9VRF9BQ0NFU1NfS0VZX1NFQ1JFVCI6IllvdXIgQWNjZXNzIEtleSBTRUNSRVQifX0%3D)
+* [Cursor](https://docs.cursor.com/tools)
 * [魔搭](https://www.modelscope.cn/mcp/servers/@aliyun/alibaba-cloud-ops-mcp-server)
 * [通义灵码](https://lingma.aliyun.com/)
 * [Smithery AI](https://smithery.ai/server/@aliyun/alibaba-cloud-ops-mcp-server)
 * [FC-Function AI](https://cap.console.aliyun.com/template-detail?template=237)
 * [阿里云百炼平台](https://bailian.console.aliyun.com/?tab=mcp#/mcp-market/detail/alibaba-cloud-ops)
 
-## 了解更多
+## 开发
 
-* [阿里云 MCP Server 开箱即用！](https://developer.aliyun.com/article/1661348)
-* [在百炼平台配置您的自定义阿里云MCP Server](https://developer.aliyun.com/article/1662120)
-* [10行代码，实现你的专属阿里云OpenAPI MCP Server](https://developer.aliyun.com/article/1662202)
-* [阿里云CloudOps MCP正式上架百炼平台MCP市场](https://developer.aliyun.com/article/1665019)
+### 添加新工具
 
-## 功能点（Tool）
+1. 在适当的工具模块中创建一个新函数
+2. 使用`@tools.append`装饰器
+3. 添加适当的文档和类型提示
+4. 在主服务器文件中注册该工具
 
-| **产品** | **工具** | **功能** | **实现方式** | **状态** |
-| --- | --- | --- | --- | --- |
-| ECS | RunCommand | 运行命令 | OOS | Done |
-|  | StartInstances | 启动实例 | OOS | Done |
-|  | StopInstances | 停止实例 | OOS | Done |
-|  | RebootInstances | 重启实例 | OOS | Done |
-|  | DescribeInstances | 查看实例 | API | Done |
-|  | DescribeRegions | 查看地域 | API | Done |
-|  | DescribeZones | 查看可用区 | API | Done |
-|  | DescribeAvailableResource | 查看资源库存 | API | Done |
-|  | DescribeImages | 查看镜像 | API | Done |
-|  | DescribeSecurityGroups | 查看安全组 | API | Done |
-|  | RunInstances | 创建实例 | OOS | Done |
-|  | DeleteInstances | 删除实例 | API | Done |
-|  | ResetPassword | 修改密码 | OOS | Done |
-|  | ReplaceSystemDisk | 更换操作系统 | OOS | Done |
-| VPC | DescribeVpcs | 查看VPC | API | Done |
-|  | DescribeVSwitches | 查看VSwitch | API | Done |
-| RDS | DescribeDBInstances | 查询数据库实例列表 | API | Done |
-|  | StartDBInstances | 启动RDS实例 | OOS | Done |
-|  | StopDBInstances | 暂停RDS实例 | OOS | Done |
-|  | RestartDBInstances | 重启RDS实例 | OOS | Done |
-| OSS | ListBuckets | 查看存储空间 | API | Done |
-|  | PutBucket | 创建存储空间 | API | Done |
-|  | DeleteBucket | 删除存储空间 | API | Done |
-|  | ListObjects | 查看存储空间中的文件信息 | API | Done |
-| CloudMonitor | GetCpuUsageData | 获取ECS实例的CPU使用率数据 | API | Done |
-|  | GetCpuLoadavgData | 获取CPU一分钟平均负载指标数据 | API | Done |
-|  | GetCpuloadavg5mData | 获取CPU五分钟平均负载指标数据 | API | Done |
-|  | GetCpuloadavg15mData | 获取CPU十五分钟平均负载指标数据 | API | Done |
-|  | GetMemUsedData | 获取内存使用量指标数据 | API | Done |
-|  | GetMemUsageData | 获取内存利用率指标数据 | API | Done |
-|  | GetDiskUsageData | 获取磁盘利用率指标数据 | API | Done |
-|  | GetDiskTotalData | 获取磁盘分区总容量指标数据 | API | Done |
-|  | GetDiskUsedData | 获取磁盘分区使用量指标数据 | API | Done |
+示例：
+```python
+@tools.append
+def my_new_tool(param1: str, param2: int = 10) -> str:
+    """
+    描述工具的功能
+    
+    参数：
+        param1: param1的描述
+        param2: param2的描述，默认为10
+        
+    返回：
+        返回值的描述
+    """
+    # 实现
+    return result
+```
+
+### 测试
+
+要在本地测试您的工具：
+
+```bash
+python test_oss.py  # 测试OSS工具的示例
+```
+
+## 贡献
+
+欢迎贡献！请随时提交Pull Request。
+
+1. Fork仓库
+2. 创建您的特性分支（`git checkout -b feature/amazing-feature`）
+3. 提交您的更改（`git commit -m 'Add some amazing feature'`）
+4. 推送到分支（`git push origin feature/amazing-feature`）
+5. 打开Pull Request
+
+## 许可证
+
+该项目采用MIT许可证 - 详情请参阅LICENSE文件。
 
 ## 联系我们
 

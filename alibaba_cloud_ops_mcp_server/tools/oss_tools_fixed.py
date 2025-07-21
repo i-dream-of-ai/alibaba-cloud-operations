@@ -1,4 +1,4 @@
-# oss_tools.py
+# oss_tools_fixed.py - 修复版本
 import os
 import alibabacloud_oss_v2 as oss
 from alibaba_cloud_ops_mcp_server.alibabacloud.utils import get_credentials_from_header
@@ -42,17 +42,22 @@ def create_client(region_id: str) -> oss.Client:
 
 
 @tools.append
-def OSS_ListBuckets(
+def OSS_ListBuckets_Fixed(
     RegionId: str = 'cn-hangzhou',
     Prefix: str = None
 ):
-    """列出指定区域的所有OSS存储空间。"""
+    """列出指定区域的所有OSS存储空间。
+    
+    Args:
+        RegionId: 阿里云区域ID，如cn-beijing, cn-hangzhou等
+        Prefix: OSS存储桶名称前缀，可选
+    """
     try:
         client = create_client(region_id=RegionId)
         paginator = client.list_buckets_paginator()
         results = []
         
-        # 修复：只有在Prefix不为None时才传递prefix参数
+        # 创建请求对象，只有在Prefix不为None时才传递
         if Prefix is not None:
             request = oss.ListBucketsRequest(prefix=Prefix)
         else:
@@ -60,7 +65,7 @@ def OSS_ListBuckets(
             
         for page in paginator.iter_page(request):
             for bucket in page.buckets:
-                # 返回格式化的存储桶信息
+                # 提取有用的存储桶信息
                 bucket_info = {
                     'name': bucket.name,
                     'creation_date': str(bucket.creation_date) if bucket.creation_date else None,
@@ -77,12 +82,18 @@ def OSS_ListBuckets(
 
 
 @tools.append
-def OSS_ListObjects(
+def OSS_ListObjects_Fixed(
     BucketName: str,
     RegionId: str = 'cn-hangzhou',
     Prefix: str = None
 ):
-    """获取指定OSS存储空间中的所有文件信息。"""
+    """获取指定OSS存储空间中的所有文件信息。
+    
+    Args:
+        BucketName: OSS存储桶名称
+        RegionId: 阿里云区域ID
+        Prefix: 对象名称前缀，可选
+    """
     if not BucketName:
         return "存储桶名称不能为空"
         
@@ -91,7 +102,7 @@ def OSS_ListObjects(
         paginator = client.list_objects_v2_paginator()
         results = []
         
-        # 修复：只有在Prefix不为None时才传递prefix参数
+        # 创建请求对象
         if Prefix is not None:
             request = oss.ListObjectsV2Request(bucket=BucketName, prefix=Prefix)
         else:
@@ -115,11 +126,16 @@ def OSS_ListObjects(
 
 
 @tools.append  
-def OSS_PutBucket(
+def OSS_PutBucket_Fixed(
     BucketName: str,
     RegionId: str = 'cn-hangzhou'
 ):
-    """创建OSS存储空间。"""
+    """创建OSS存储空间。
+    
+    Args:
+        BucketName: 存储桶名称
+        RegionId: 阿里云区域ID
+    """
     if not BucketName:
         return "存储桶名称不能为空"
         
@@ -133,11 +149,16 @@ def OSS_PutBucket(
 
 
 @tools.append
-def OSS_DeleteBucket(
+def OSS_DeleteBucket_Fixed(
     BucketName: str,
     RegionId: str = 'cn-hangzhou'
 ):
-    """删除OSS存储空间。"""
+    """删除OSS存储空间。
+    
+    Args:
+        BucketName: 存储桶名称
+        RegionId: 阿里云区域ID
+    """
     if not BucketName:
         return "存储桶名称不能为空"
         
@@ -148,39 +169,3 @@ def OSS_DeleteBucket(
         return f"存储桶 {BucketName} 删除成功"
     except Exception as e:
         return f"删除存储桶失败: {str(e)}"
-def OSS_PutBucket(
-    BucketName: str = Field(description='AlibabaCloud OSS Bucket Name'),
-    RegionId: str = Field(description='AlibabaCloud region ID', default='cn-hangzhou'),
-    StorageClass: str = Field(description='The Storage Type of AlibabaCloud OSS Bucket, The value range is as follows: '
-                                          'Standard (default): standard storage, '
-                                          'IA: infrequent access, Archive: archive storage, '
-                                          'ColdArchive: cold archive storage, '
-                                          'DeepColdArchive: deep cold archive storage', default='Standard'),
-    DataRedundancyType: str = Field(description='The data disaster recovery type of AlibabaCloud OSS Bucket, '
-                                                'LRS (default): Locally redundant LRS, which stores your data '
-                                                'redundantly on different storage devices in the same availability zone. '
-                                                'ZRS: Intra-city redundant ZRS, which uses a multi-availability zone '
-                                                '(AZ) mechanism to store your data redundantly in three availability '
-                                                'zones in the same region.', default='LRS')
-):
-    """创建一个新的OSS存储空间。"""
-    client = create_client(region_id=RegionId)
-    result = client.put_bucket(oss.PutBucketRequest(
-        bucket=BucketName,
-        create_bucket_configuration=oss.CreateBucketConfiguration(
-            storage_class=StorageClass,
-            data_redundancy_type=DataRedundancyType
-        )
-    ))
-    return result.__str__()
-
-
-@tools.append
-def OSS_DeleteBucket(
-    BucketName: str = Field(description='AlibabaCloud OSS Bucket Name'),
-    RegionId: str = Field(description='AlibabaCloud region ID', default='cn-hangzhou')
-):
-    """删除指定的OSS存储空间。"""
-    client = create_client(region_id=RegionId)
-    result = client.delete_bucket(oss.DeleteBucketRequest(bucket=BucketName))
-    return result.__str__()
