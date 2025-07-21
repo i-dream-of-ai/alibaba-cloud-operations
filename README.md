@@ -1,8 +1,10 @@
 # Alibaba Cloud Ops MCP Server
 
+**This is an adaptation of the Alibaba Cloud Ops MCP Server specifically for Amazon Q Developer CLI integration.**
+
 [![GitHub stars](https://img.shields.io/github/stars/RadiumGu/alicloud-ops-mcp?style=social)](https://github.com/RadiumGu/alicloud-ops-mcp)
 
-[中文版本](./README_zh_updated.md)
+[中文版本](./README_zh.md)
 
 Alibaba Cloud Ops MCP Server is a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/introduction) server that provides seamless integration with Alibaba Cloud APIs, enabling AI assistants to operate resources on Alibaba Cloud, supporting ECS, Cloud Monitor, OOS, and other widely used cloud products.
 
